@@ -7,45 +7,37 @@
       <label>Width</label>
       <input type="text" v-model="stage.width">
 
-      <button @click.prevent="print">Generate PDF</button>
+      <button @click.prevent="print">Generate Download</button>
       <a v-if="pdfDownload" :href="pdfDownload" class="button" id="btn-download" download="generated.png">Download</a>
       <button @click="logJson">Log JSON</button>
     </div>
-    <div v-for="(item, index) in assets" :key="item.id" style="display: flex; justify-content: space-between">
+    <div style="display: flex; justify-content: space-between">
       <div>
-        <h3>Text</h3>
-          <div v-for="(text, textIndex) in item.texts" :key="text.id">
-            <label>Text</label>
-            <input type="text" v-model="text.text">
-            <label>Color</label>
-            <input type="color" v-model="text.fill">
-            <button @click.prevent="removeItem('texts', index, textIndex)">Remove</button>
-          </div>
-          <button @click.prevent="addText(index)">Add Text</button>
-
-        <h3>Images</h3>
-          <div v-for="(img, imgIndex) in item.images" :key="img.id">
-            <label>{{img.name}}</label>
-            <button @click.prevent="removeItem('images', index, imgIndex)">Remove</button>
-          </div>
-          <input ref="newImageUrl" type="text">
-          <button @click.prevent="addImage(index)">Add Image</button>
-
-          <h3>Rectangles</h3>
-          <div v-for="(rect, rectIndex) in item.rectangles" :key="rect.id">
-            <label>Color</label>
-            <input type="color" v-model="rect.fill">
-            <button @click.prevent="removeItem('rectangles', index, rectIndex)">Remove</button>
-          </div>
-          <button @click.prevent="addRect(index)">Add Rectangle</button>
+        <h3>Assets</h3>
+        <div v-for="(item, index) in assets" :key="item.id">
+            <label>{{item.type}}</label>
+            <template v-if="item.type == 'text'">
+              <input type="text" v-model="item.text">
+              <input type="color" v-model="item.fill">
+            </template>
+            <template v-if="item.type == 'image'">
+              {{item.name}}
+            </template>
+            <template v-if="item.type == 'rect'">
+              <input type="color" v-model="item.fill">
+            </template>
+            <button @click.prevent="removeItem(index)">X</button>
+            <button v-if="index > 0" @click.prevent="moveUp(index)">&uarr;</button>
+            <button v-if="index < assets.length-1" @click.prevent="moveDown(index)">&darr;</button>
+        </div>
+          <button @click.prevent="addText()">Add Text</button>
+          <button @click.prevent="addRect()">Add Rect</button>
+          <input ref="newImageUrl" type="text" placeholder="http://">
+          <button @click.prevent="addImage()">Add Image</button>
+          
       </div>
-
-
-      <asset :stage="stage" :images="item.images" :texts="item.texts" :rectangles="item.rectangles" @itemChanged="itemChanged"></asset>
+      <asset :stage="stage" :items="assets"></asset>
     </div>
-    <button @click.prevent="addPage">Add Page</button>
-
-    <!-- <img ref="imgPreview" height="500" width="500" /> -->
   </div>
 </template>
 
@@ -61,24 +53,19 @@ export default {
     Asset
   },
   methods: {
-    itemChanged(payload) {
-      let item = this.assets.images.find(r => r.name === payload.name);
-
-      if(!item) {
-        item = this.assets.texts.find(r => r.name === payload.name);
-      }
-
-      if(!item) {
-        item = this.assets.rectangles.find(r => r.name === payload.name);
-      }
-
-      item = payload;
+    moveUp(index) {
+      const item = this.assets.splice(index, 1);
+      this.assets.splice(index -1, 0, item[0]);
     },
-    addText(index){
+    moveDown(index) {
+      const item = this.assets.splice(index, 1);
+      this.assets.splice(index + 1, 0, item[0]);
+    },
+    addText(){
       var ts = Math.round((new Date()).getTime() / 1000);
       let name = 'text'+ts;
 
-      this.assets[index].texts.push(
+      this.assets.push(
         {
           rotation: 0,
           x: 10,
@@ -87,11 +74,12 @@ export default {
           fontSize: 12,
           fill: '#000000',
           draggable: true,
-          name: name
+          name: name,
+          type: 'text'
       });
     },
-    addImage(index) {
-      let target = this.$refs.newImageUrl[index];
+    addImage() {
+      let target = this.$refs.newImageUrl;
       let image = new window.Image();
       image.origin = 'anonymous';
       image.crossOrigin = 'anonymous';
@@ -99,7 +87,7 @@ export default {
       image.onload = () => {
         var ts = Math.round((new Date()).getTime() / 1000);
         let name = 'image'+ts;
-        this.assets[index].images.push({
+        this.assets.push({
               rotation: 0,
               x: 20,
               y: 20,
@@ -110,21 +98,22 @@ export default {
               src: target.value,
               image: image,
               name: name,
-              draggable: true
+              draggable: true,
+              type: 'image'
             });
 
           target.value = '';
       }
 
     },
-    removeItem(type, index, itemIndex) {
-      this.assets[index][type].splice(itemIndex, 1);
+    removeItem(index) {
+      this.assets.splice(index, 1);
     },
     addRect(index) {
       var ts = Math.round((new Date()).getTime() / 1000);
       let name = 'text'+ts;
 
-      this.assets[index].rectangles.push(
+      this.assets.push(
         {
           rotation: 0,
           width: 100,
@@ -133,14 +122,9 @@ export default {
           y: 10,
           fill: '#cccccc',
           draggable: true,
-          name: name
+          name: name,
+          type: 'rect'
       });
-    },
-    addPage() {
-      this.assets.push({
-        texts: [],
-        images: []
-      })
     },
     print() {
       let canvas = document.querySelector('.konvajs-content canvas');
@@ -182,8 +166,6 @@ export default {
       pdfDownload: null,
       jsonToLoad: '',
       assets: [
-        {
-          images: [
             {
               rotation: 0,
               x: 150,
@@ -195,10 +177,9 @@ export default {
               src: 'https://images.adsttc.com/media/images/5de3/1ca6/3312/fda8/2a00/00b3/newsletter/001.jpg?1575165037',
               image: null,
               name: 'image1',
-              draggable: true
-            }
-          ],
-          texts: [
+              draggable: true,
+              type: 'image'
+            },
             {
               rotation: 0,
               x: 50,
@@ -207,10 +188,9 @@ export default {
               fontSize: 25,
               fill: '#000000',
               draggable: true,
-              name: 'text1'
-            }
-          ],
-          rectangles: [
+              name: 'text1',
+              type: 'text'
+            },
             {
               rotation: 0,
               x: 80,
@@ -221,12 +201,10 @@ export default {
               scaleY: 1,
               name: 'rect1',
               fill: '#cccccc',
-              draggable: true
+              draggable: true,
+              type: 'rect'
             }
           ]
-        }
-      ],
-      
     }
   }
 

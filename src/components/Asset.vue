@@ -2,9 +2,12 @@
   <div :style="container">
     <v-stage ref="stage" :config="stage" @mousedown="handleStageMouseDown" @touchstart="handleStageMouseDown">
       <v-layer ref="layer">
-        <v-rect v-for="item in rectangles" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
-        <v-image v-for="item in images" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
-        <v-text v-for="item in texts" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
+        <template v-for="item in items">
+          <v-rect v-if="item.type == 'rect'" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
+          <v-image v-if="item.type == 'image'" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
+          <v-text v-if="item.type == 'text'" :key="item.id" :config="item" @transformend="handleTransformEnd"/>
+        </template>
+        
         <v-transformer ref="transformer" />
       </v-layer>
     </v-stage>
@@ -25,20 +28,12 @@ export default {
       return `border: 1px solid; width:${this.stage.width}px; height: ${this.stage.height}px; margin-right:100px`
     }
   },
-  props: ['images', 'texts', 'stage', 'rectangles'],
+  props: ['items', 'stage'],
   methods: {
     handleTransformEnd(e) {
       // shape is transformed, let us save new attrs back to the node
       // find element in our state
-      let item = this.images.find(r => r.name === this.selectedShapeName);
-
-      if(!item) {
-        item = this.texts.find(r => r.name === this.selectedShapeName);
-      }
-
-      if(!item) {
-        item = this.rectangles.find(r => r.name === this.selectedShapeName);
-      }
+      let item = this.items.find(r => r.name === this.selectedShapeName);
 
       if(item){
         // update the state
@@ -47,7 +42,6 @@ export default {
         item.rotation = e.target.rotation();
         item.scaleX = e.target.scaleX();
         item.scaleY = e.target.scaleY();
-        this.$emit('item-changed', item);
         return
       }
       
@@ -69,10 +63,8 @@ export default {
 
       // find clicked rect by its name
       const name = e.target.name();
-      const img = this.images.find(r => r.name === name);
-      const text = this.texts.find(r => r.name === name);
-      const rect = this.rectangles.find(r => r.name === name);
-      if (img || text || rect) {
+      const item = this.items.find(r => r.name === name);
+      if (item) {
         this.selectedShapeName = name;
       } else {
         this.selectedShapeName = '';
@@ -102,13 +94,15 @@ export default {
     }
   },
   created() {
-    this.images.forEach(v => {
-      let image = new window.Image();
-      image.origin = 'anonymous';
-      image.crossOrigin = 'anonymous';
-      image.src = v.src;
-      image.onload = () => {
-        v.image = image;
+    this.items.forEach(v => {
+      if(v.type == 'image'){
+        let image = new window.Image();
+        image.origin = 'anonymous';
+        image.crossOrigin = 'anonymous';
+        image.src = v.src;
+        image.onload = () => {
+          v.image = image;
+        }
       }
     });
   }
