@@ -8,7 +8,7 @@
       <input type="text" v-model="stage.width">
 
       <button @click.prevent="print">Generate PDF</button>
-      <a v-if="pdfDownload" :href="pdfDownload" class="button" id="btn-download" download="generated.pdf">Download</a>
+      <a v-if="pdfDownload" :href="pdfDownload" class="button" id="btn-download" download="generated.png">Download</a>
       <button @click="logJson">Log JSON</button>
     </div>
     <div v-for="(item, index) in assets" :key="item.id" style="display: flex; justify-content: space-between">
@@ -44,11 +44,13 @@
       <asset :stage="stage" :images="item.images" :texts="item.texts" :rectangles="item.rectangles" @itemChanged="itemChanged"></asset>
     </div>
     <button @click.prevent="addPage">Add Page</button>
-    
+
+    <!-- <img ref="imgPreview" height="500" width="500" /> -->
   </div>
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import Asset from './components/Asset'
 import jsPDF from 'jspdf';
 import toDataURL from 'canvas-background';
@@ -142,23 +144,30 @@ export default {
     },
     print() {
       let canvas = document.querySelector('.konvajs-content canvas');
-
-      const dpi = 96;
-      const height = (this.stage.height * 25.4) / dpi;
-      const width = (this.stage.width * 25.4) / dpi;
-      console.log(height, width);
-      var pdf = new jsPDF('l', 'mm', [this.stage.height, this.stage.width]);
-      // var pdf = new jsPDF('l', 'mm', [height, width]);
-
       const data = toDataURL(canvas, '#ffffff', {
         type: 'image/png',
         encoderOptions: 1.0
       });
+      this.pdfDownload = data;
+      // const height = Math.floor(this.stage.height * 0.264583)
+      // const width = Math.floor(this.stage.width * 0.264583)
+      // console.log(height, width);
+      // var pdf = new jsPDF('l', 'mm', [this.stage.height, this.stage.width]);
+      // var pdf = new jsPDF('l', 'mm', [height, width]);
 
-      pdf.addImage(data,"jpeg", 0, 0)
-      let queryString = pdf.output("datauristring");
-      console.log(queryString);
-      this.pdfDownload = queryString;
+      
+
+      // pdf.addImage(canvas.toDataURL(),"jpeg", 0, 0)
+      // let queryString = pdf.output("datauristring");
+      // this.pdfDownload = queryString;
+      // let preview = this.$refs.imgPreview;
+      // preview.setAttribute('src', canvas.toDataURL());
+      // console.log(preview);
+      // let img = this.$refs.imagePreview;
+      // img.src = queryString;
+      // img.height = height+'mm';
+      // img.width = width+'mm';
+
     },
     logJson() {
       console.log(JSON.stringify(this.assets));
