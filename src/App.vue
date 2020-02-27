@@ -5,7 +5,7 @@
       <downloader></downloader>
     </div>
     <div class="flex">
-      <editor :assets="assets"></editor>
+      <editor :assets="assets" @assetsChanged="assetsChanged"></editor>
       <asset :stage="stage" :items="assets"></asset>
     </div>
   </div>
@@ -25,7 +25,11 @@ export default {
     Downloader,
     CanvasSettings
   },
-  methods: {},
+  methods: {
+    assetsChanged(v) {
+      this.assets = v;
+    }
+  },
   data() {
     return {
       stage: {

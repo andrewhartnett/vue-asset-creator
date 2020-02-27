@@ -1,22 +1,26 @@
 <template>
   <div>
         <h3>Assets</h3>
-        <div v-for="(item, index) in assets" :key="item.id">
-            <label>{{item.type}}</label>
+        <draggable v-model="computedAssets" @start="drag=true" @end="drag=false">
+          <div v-for="(item, index) in assets" :key="item.id" class="flex" style="padding: 10px 5px; margin:10px 0; border: 1px dashed #ccc">
+          <div style="width: 70%">
             <template v-if="item.type == 'text'">
-              <input type="text" v-model="item.text">
-              <input type="color" v-model="item.fill">
+              <input type="text" v-model="item.text" style="display:block; margin-bottom: 5px;">
+              <input type="color" v-model="item.fill" style="display:block;">
             </template>
             <template v-if="item.type == 'image'">
-              {{item.name}}
+              <i class="fa fa-image"></i>
             </template>
             <template v-if="item.type == 'rect'">
               <input type="color" v-model="item.fill">
             </template>
+          </div>
+          <div>
             <button @click.prevent="removeItem(index)">X</button>
-            <button v-if="index > 0" @click.prevent="moveUp(index)">&uarr;</button>
-            <button v-if="index < assets.length-1" @click.prevent="moveDown(index)">&darr;</button>
+          </div>
         </div>
+        </draggable>
+        
           <button @click.prevent="addText()">Add Text</button>
           <button @click.prevent="addRect()">Add Rect</button>
           <input ref="newImageUrl" type="text" placeholder="http://">
@@ -26,17 +30,19 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
+
 export default {
+  data() {
+    return {
+      computedAssets: []
+    }
+  },
   props: ['assets'],
+  components: {
+    draggable
+  },
   methods: {
-    moveUp(index) {
-      const item = this.assets.splice(index, 1);
-      this.assets.splice(index -1, 0, item[0]);
-    },
-    moveDown(index) {
-      const item = this.assets.splice(index, 1);
-      this.assets.splice(index + 1, 0, item[0]);
-    },
     addText(){
       var ts = Math.round((new Date()).getTime() / 1000);
       let name = 'text'+ts;
@@ -102,6 +108,15 @@ export default {
           type: 'rect'
       });
     },
+  },
+  created() {
+    this.computedAssets = this.assets;
+  },
+  watch: {
+    computedAssets(v) {
+      this.$emit('assetsChanged', v);
+    }
   }
+  
 }
 </script>
