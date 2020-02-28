@@ -20,12 +20,26 @@
           </div>
         </div>
         </draggable>
-        
+
+        <div>
           <button @click.prevent="addText()">Add Text</button>
           <button @click.prevent="addRect()">Add Rect</button>
-          <input ref="newImageUrl" type="text" placeholder="http://">
-          <button @click.prevent="addImage()">Add Image</button>
+        </div>
           
+        <div>
+          <button @click.prevent="showImageAdd = true">Add Image</button>
+          <div v-if="showImageAdd">
+            <h4>Select an Image</h4>
+              <div class="imgContainer" v-for="image in images" :key="image.id" @click="newImageUrl = image">
+                <img :src="image" crossorigin="anonymous" origin="anonymous" alt="">
+              </div>
+            <h4>Or Enter Url</h4>
+            <input ref="newImageUrl" type="text" placeholder="http://" v-model="newImageUrl">
+            <button v-if="newImageUrl" @click="addImage">Add</button>
+          </div>
+          
+        </div>
+
       </div>
 </template>
 
@@ -35,10 +49,13 @@ import draggable from 'vuedraggable'
 export default {
   data() {
     return {
-      computedAssets: []
+      computedAssets: [],
+      showImageAdd: true,
+      selectedableImages: [],
+      newImageUrl: ''
     }
   },
-  props: ['assets'],
+  props: ['assets', 'images'],
   components: {
     draggable
   },
@@ -120,3 +137,18 @@ export default {
   
 }
 </script>
+
+<style scoped>
+
+.imgContainer {
+  height: 100px;
+  width: 100px;
+  border:1px solid black;
+}
+
+.imgContainer > img {
+  height:100%;
+  width:100%;
+}
+
+</style>>

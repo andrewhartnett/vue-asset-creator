@@ -20,7 +20,7 @@ export default {
   },
   methods: {
     logJson() {
-      console.log(JSON.stringify(this.assets));
+      console.log(JSON.stringify(this.$parent.assets));
     },
     print() {
       let canvas = document.querySelector('.konvajs-content canvas');

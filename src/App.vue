@@ -5,7 +5,7 @@
       <downloader></downloader>
     </div>
     <div class="flex">
-      <editor :assets="assets" @assetsChanged="assetsChanged"></editor>
+      <editor :assets="assets" @assetsChanged="assetsChanged" :images="images"></editor>
       <asset :stage="stage" :items="assets"></asset>
     </div>
   </div>
@@ -58,11 +58,22 @@ export default {
               rotation: 0,
               x: 50,
               y: 50,
-              text: "Welcome COREcreate",
+              text: "CORE",
               fontSize: 25,
               fill: '#000000',
               draggable: true,
               name: 'text1',
+              type: 'text'
+            },
+            {
+              rotation: 0,
+              x: 150,
+              y: 50,
+              text: "CREATE",
+              fontSize: 25,
+              fill: '#000000',
+              draggable: true,
+              name: 'text2',
               type: 'text'
             },
             {
@@ -80,6 +91,11 @@ export default {
             }
           ]
     }
+  },
+  created () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const images = urlParams.getAll('image');
+    this.images = images;
   }
 
 }
